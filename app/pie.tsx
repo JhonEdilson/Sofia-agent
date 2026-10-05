@@ -69,12 +69,12 @@ export function Pie({ contactoHref }: { contactoHref: string | null }) {
         </p>
       </div>
 
-      <p
+      {/* Marca de agua decorativa. El texto va en ::after y no en el DOM: WCAG exime a la decoración del
+          contraste mínimo, pero axe/Lighthouse medían este 1.14:1 aunque tuviera aria-hidden. */}
+      <div
         aria-hidden="true"
-        className="mt-14 select-none overflow-hidden whitespace-nowrap text-center font-display text-[12.8vw] uppercase leading-[.8] text-pearl/[.07] md:text-[min(13.2vw,250px)]"
-      >
-        Sonrisa Viva
-      </p>
+        className="mt-14 select-none overflow-hidden whitespace-nowrap text-center font-display text-[12.8vw] uppercase leading-[.8] text-pearl/[.07] after:content-['Sonrisa_Viva'] md:text-[min(13.2vw,250px)]"
+      />
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-pearl/10 pt-5 text-nota">
         <p>Demo de portafolio de Jhon Escobar</p>

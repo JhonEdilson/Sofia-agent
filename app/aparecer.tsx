@@ -22,9 +22,14 @@ export function Aparecer() {
       { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
     );
 
-    for (const el of document.querySelectorAll<HTMLElement>("[data-aparecer]")) {
-      // Solo se esconde lo que está bajo el pliegue: lo que ya se ve al cargar no parpadea.
-      if (el.getBoundingClientRect().top <= window.innerHeight) continue;
+    // Solo se esconde lo que está bajo el pliegue: lo que ya se ve al cargar no parpadea. Primero se
+    // leen todas las posiciones y después se escribe: alternar lectura y escritura en el mismo bucle
+    // obliga al navegador a recalcular el layout en cada vuelta (forced reflow).
+    const alto = window.innerHeight;
+    const bajoPliegue = [...document.querySelectorAll<HTMLElement>("[data-aparecer]")].filter(
+      (el) => el.getBoundingClientRect().top > alto,
+    );
+    for (const el of bajoPliegue) {
       el.classList.add("oculto");
       io.observe(el);
     }

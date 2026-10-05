@@ -1,14 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import {
-  ConversationProvider,
-  useConversationControls,
-  useConversationMode,
-  useConversationStatus,
-} from "@elevenlabs/react";
-import { interpretarEvento, type EventoTool } from "@/lib/eventos-sofia";
-import { useDemo } from "./demo-estado";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 
 // Barras del orbe: altura en reposo (--h) y desfase de la onda cuando Sofía habla.
 const BARRAS = [
@@ -38,42 +31,36 @@ function Orbe({ hablando, activa }: { hablando: boolean; activa: boolean }) {
   );
 }
 
-function Panel({ caida, alIniciar }: { caida: boolean; alIniciar: () => void }) {
-  const { startSession, endSession } = useConversationControls();
-  const { status } = useConversationStatus();
-  const { isSpeaking } = useConversationMode();
-  const [fallo, setFallo] = useState(false);
-
-  const conectada = status === "connected";
-  const conectando = status === "connecting";
-
-  // El micrófono se pide aquí, tras el clic: nunca al cargar la página.
-  async function hablar() {
-    setFallo(false);
-    alIniciar(); // borra un aviso anterior y marca la hora de inicio de este intento
-    try {
-      // El token se pide en cada inicio: es de corta vida y la API key nunca sale del servidor.
-      const res = await fetch("/api/token");
-      if (!res.ok) throw new Error(`token ${res.status}`);
-      const { token } = await res.json();
-      startSession({ conversationToken: token });
-    } catch (e) {
-      console.error("sofia", e);
-      setFallo(true);
-    }
-  }
-
+// Lo que se ve del panel. Sin estado propio: la usa tanto la vista en reposo de abajo (antes de cargar el
+// SDK) como el panel conectado de sofia-sesion.tsx, así las dos se ven idénticas y no hay salto al cargar.
+export function Vista({
+  conectada = false,
+  conectando = false,
+  hablando = false,
+  fallo = false,
+  onBoton,
+  enfocar = false,
+}: {
+  conectada?: boolean;
+  conectando?: boolean;
+  hablando?: boolean;
+  fallo?: boolean;
+  onBoton?: () => void;
+  // Al pasar de la vista en reposo al panel conectado, React reemplaza el botón y el foco del teclado
+  // caería al <body>. El panel conectado lo pide de vuelta al montarse.
+  enfocar?: boolean;
+}) {
   const estado = conectando
     ? "Conectando…"
     : conectada
-      ? isSpeaking
+      ? hablando
         ? "Sofía está hablando"
         : "Sofía le escucha"
       : "";
 
   return (
     <div className="flex h-full flex-col">
-      <Orbe hablando={conectada && isSpeaking} activa={conectada || conectando} />
+      <Orbe hablando={hablando} activa={conectada || conectando} />
       <h3 className="mt-6 text-dato font-medium tracking-[-.02em]">Hable con Sofía</h3>
       <p className="mt-1 text-sm font-semibold text-pearl/70">Asistente virtual de la clínica</p>
       <p className="mt-4 max-w-sm text-cuerpo text-pearl/85">
@@ -84,8 +71,9 @@ function Panel({ caida, alIniciar }: { caida: boolean; alIniciar: () => void }) 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={conectada ? endSession : hablar}
+          onClick={onBoton}
           disabled={conectando}
+          autoFocus={enfocar}
           className="group inline-flex items-center gap-2.5 rounded-full border border-pearl bg-pearl py-2.5 pl-6 pr-2.5 text-sm font-bold text-ink transition-[color,background-color,transform] duration-300 hover:bg-transparent hover:text-pearl active:scale-[.97] disabled:opacity-60"
         >
           {conectada ? "Terminar la conversación" : "Hablar con Sofía"}
@@ -101,8 +89,8 @@ function Panel({ caida, alIniciar }: { caida: boolean; alIniciar: () => void }) 
       </div>
 
       {/* Cubre dos fallos distintos con un mismo mensaje, sin detalles técnicos: no se pudo pedir el token
-          (`fallo`) o la sesión se cayó sola al arrancar (`caida`, p. ej. sin créditos). */}
-      {(fallo || caida) && (
+          o la sesión se cayó sola al arrancar (p. ej. sin créditos). */}
+      {fallo && (
         <p role="alert" className="mt-4 rounded-xl bg-pearl/10 p-3 text-cuerpo">
           Sofía no pudo atenderle esta vez. Puede agendar con el formulario, que usa el mismo calendario.
         </p>
@@ -116,36 +104,39 @@ function Panel({ caida, alIniciar }: { caida: boolean; alIniciar: () => void }) 
   );
 }
 
-// Una sesión que termina sin que el visitante la cierre y dura menos de esto es una falla de arranque,
-// no una conversación que acabó: con la cuenta sin créditos ElevenLabs crea la sala y la cierra a los
-// 1 o 3 s, y el SDK lo reporta como `reason: "agent"`, igual que una colgada normal del agente.
-const FALLA_SI_DURA_MENOS_DE_MS = 15000;
+// El SDK de voz pesa ~500 KB y casi nadie lo usa en los primeros segundos: se baja aparte. import() es
+// idempotente, así que la precarga de abajo y el dynamic() comparten la misma descarga.
+const cargarSesion = () => import("./sofia-sesion");
+const SesionSofia = dynamic(() => cargarSesion().then((m) => m.SesionSofia), {
+  // Solo se ve si la persona hace clic antes de que termine la precarga.
+  loading: () => <Vista conectando />,
+});
 
 export function PanelSofia() {
-  const { registrarCita, registrarAviso } = useDemo();
-  const [caida, setCaida] = useState(false);
-  const inicio = useRef(0);
+  const [iniciada, setIniciada] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Precarga cuando el panel se acerca a la pantalla: llega después del hero (no compite con la foto
+  // principal) y antes del clic, así que al presionar el botón la sesión arranca sin espera.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        void cargarSesion();
+        io.disconnect();
+      },
+      { rootMargin: "800px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  if (iniciada) return <SesionSofia />;
   return (
-    <ConversationProvider
-      // Cada evento de tool pasa por interpretarEvento (probado en lib/): un error de la tool nunca
-      // se muestra como cita creada o aviso enviado.
-      onAgentToolResponse={(evento) => {
-        const r = interpretarEvento(evento as unknown as EventoTool);
-        if (r?.tipo === "cita") registrarCita({ id: r.id, origen: "sofia", inicio: r.inicio, titulo: r.titulo });
-        else if (r?.tipo === "aviso") registrarAviso(r.id);
-      }}
-      onError={(error) => console.error("conversation error", error)}
-      onDisconnect={(d) => {
-        if (d.reason !== "user" && Date.now() - inicio.current < FALLA_SI_DURA_MENOS_DE_MS) setCaida(true);
-      }}
-    >
-      <Panel
-        caida={caida}
-        alIniciar={() => {
-          setCaida(false);
-          inicio.current = Date.now();
-        }}
-      />
-    </ConversationProvider>
+    <div ref={ref} className="h-full">
+      <Vista onBoton={() => setIniciada(true)} />
+    </div>
   );
 }

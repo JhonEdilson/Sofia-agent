@@ -75,7 +75,11 @@ export default function Home() {
               src="/img/hero-sonrisa.jpg"
               alt="Mujer sonriendo a cámara, primer plano de su rostro"
               fill
-              preload
+              // Next 16 recomienda fetchPriority sobre `preload` para la imagen del LCP: el <img> ya
+              // está en el HTML inicial, lo que faltaba era que el navegador la pidiera antes que el JS.
+              // Sin `preload`, Next pone loading="lazy" por defecto: el eager es obligatorio aquí.
+              fetchPriority="high"
+              loading="eager"
               sizes="100vw"
               className="object-cover object-[70%_50%] md:object-[50%_50%]"
             />
