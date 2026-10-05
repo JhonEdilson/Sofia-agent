@@ -26,8 +26,9 @@ const TRATAMIENTOS: Tratamiento[] = [
     texto:
       "Aclara el color de sus dientes sin cambiar su forma. Antes se hace una limpieza dental.",
     datos: ["Cita de 60 minutos", "Antes, una limpieza de 45 minutos"],
-    foto: "/img/tratamiento-blanqueamiento.jpg",
-    alt: "Primer plano de una sonrisa abierta con dientes de color natural",
+    // "-3": el "-2" ya lo usó otra foto y next/image cachea por URL.
+    foto: "/img/tratamiento-blanqueamiento-3.jpg",
+    alt: "Primer plano de la sonrisa suave de una mujer mayor de piel clara",
   },
   {
     titulo: "Ortodoncia invisible",

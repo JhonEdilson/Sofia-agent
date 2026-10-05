@@ -6,6 +6,8 @@ import { Aparecer } from "./aparecer";
 import { DemoProvider } from "./demo-estado";
 import { Horario } from "./horario";
 import { Nav } from "./nav";
+import { OrbeMini } from "./orbe-mini";
+import { PildoraSofia } from "./pildora-sofia";
 import { Pie } from "./pie";
 import { Preguntas } from "./preguntas";
 import { Proceso } from "./proceso";
@@ -27,20 +29,6 @@ function enlaceWhatsapp() {
 // Las tres tarjetas del primer scroll: al pasar el cursor se aclaran y su flecha se desplaza.
 const tarjeta =
   "group relative flex flex-col gap-0.5 px-5 py-3 transition-colors duration-300 hover:bg-white focus-visible:bg-white md:h-[140px] md:justify-between md:px-[26px] md:py-5";
-
-// Orbe de voz de Sofía. Estático por ahora; se vuelve reactivo al audio al integrar @elevenlabs/react.
-function Orbe() {
-  return (
-    <span
-      aria-hidden="true"
-      className="flex size-[22px] shrink-0 items-center justify-center gap-0.5 rounded-full bg-ink"
-    >
-      {[6, 12, 8, 13].map((h, i) => (
-        <i key={i} className="block w-0.5 rounded-[1px] bg-pearl" style={{ height: h }} />
-      ))}
-    </span>
-  );
-}
 
 export default function Home() {
   const whatsapp = enlaceWhatsapp();
@@ -90,7 +78,7 @@ export default function Home() {
             className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(8,10,9,.5)_0,rgba(8,10,9,0)_170px),linear-gradient(0deg,rgba(8,10,9,.78)_0%,rgba(8,10,9,.3)_42%,rgba(8,10,9,.1)_100%)]"
           />
 
-          <p style={{ "--retraso": "350ms" } as CSSProperties} className="hero-texto mx-4 mb-4 max-w-[300px] text-lead leading-[1.45] text-pearl [text-shadow:0_1px_14px_rgba(0,0,0,.45)] md:absolute md:left-[34px] md:top-[330px] md:mx-0 md:mb-0">
+          <p style={{ "--retraso": "350ms" } as CSSProperties} className="hero-texto mx-4 mb-4 max-w-[300px] text-lead leading-[1.45] text-pearl [text-shadow:0_1px_14px_rgba(0,0,0,.45)] md:mx-0 md:mb-6 md:ml-[34px] md:max-w-[360px]">
             Diseño de sonrisa, carillas y blanqueamiento. Su primera valoración es gratuita.
           </p>
 
@@ -114,7 +102,7 @@ export default function Home() {
             </a>
             <a href="#sofia" className={tarjeta}>
               <small className="flex items-center gap-2.5 text-nota font-medium text-muted">
-                <Orbe />
+                <OrbeMini />
                 Sofía, asistente virtual
               </small>
               <Flecha className="absolute right-5 top-3.5 size-[18px] transition-transform duration-500 ease-[var(--ease)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 md:right-6 md:top-[18px]" />
@@ -141,6 +129,7 @@ export default function Home() {
         </DemoProvider>
       </main>
       <Pie contactoHref={whatsapp} />
+      <PildoraSofia />
     </>
   );
 }
