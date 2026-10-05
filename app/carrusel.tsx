@@ -8,11 +8,10 @@ const DURACION = 700; // ms que tarda una tarjeta en pasar a la siguiente
 // easeInOutCubic: arranca y frena despacio; a mitad de camino va más rápido. t va de 0 a 1.
 const suavizar = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-// Slider de las tarjetas de tratamientos. En móvil es un carrusel con imán al centro (se arrastra con el
-// dedo) y flechas atrás/adelante centradas debajo; desde `md` es una cuadrícula de 4 y las flechas se van.
-// Cada tarjeta mide --ancho y el relleno lateral de la lista es justo el que deja centrada la primera y
-// la última, así que cualquiera queda centrada al soltar. El `+20px` compensa el sangrado `-mx-5`: un
-// padding en % se mide contra el ancho del PADRE, y la lista es 40 px más ancha que él (20 por lado).
+// Franja de tratamientos: fotos a sangre hasta el borde de la hoja, separadas por 2 px, que se arrastran
+// con el dedo o la rueda y tienen imán al inicio de cada foto. En todos los tamaños la siguiente foto
+// asoma por la derecha (el ancho lo fija cada tarjeta): ese asomo es lo que dice "esto se desliza".
+// Flechas atrás/adelante debajo, también en escritorio, porque ahí no hay gesto de arrastre obvio.
 export function Carrusel({ children, etiqueta }: { children: React.ReactNode; etiqueta: string }) {
   const lista = useRef<HTMLUListElement>(null);
   const [extremos, setExtremos] = useState({ inicio: true, fin: false });
@@ -71,9 +70,10 @@ export function Carrusel({ children, etiqueta }: { children: React.ReactNode; et
   function mover(dir: 1 | -1) {
     const el = lista.current;
     if (!el) return;
-    // Un paso = una tarjeta más el hueco (gap-4 = 16 px). Si ya hay una animación en curso, el nuevo paso
-    // se suma a donde iba, así dos toques seguidos avanzan dos tarjetas en vez de uno.
-    const paso = (el.querySelector("li")?.getBoundingClientRect().width ?? el.clientWidth) + 16;
+    // Un paso = una tarjeta más el hueco entre tarjetas (se lee del CSS para no duplicar el valor). Si ya
+    // hay una animación en curso, el nuevo paso se suma a donde iba: dos toques seguidos avanzan dos.
+    const hueco = parseFloat(getComputedStyle(el).columnGap) || 0;
+    const paso = (el.querySelector("li")?.getBoundingClientRect().width ?? el.clientWidth) + hueco;
     const maximo = el.scrollWidth - el.clientWidth;
     const meta = Math.max(0, Math.min(maximo, (destino.current ?? el.scrollLeft) + dir * paso));
     const salida = el.scrollLeft;
@@ -108,15 +108,16 @@ export function Carrusel({ children, etiqueta }: { children: React.ReactNode; et
 
   return (
     <>
+      {/* -mx-5 / md:-mx-10 deshace el relleno de la sección: la franja toca los bordes de la hoja. */}
       <ul
         ref={lista}
         aria-label={etiqueta}
-        className="-mx-5 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[calc(50%+20px-var(--ancho)/2)] pb-2 [--ancho:min(72vw,20rem)] [scrollbar-width:none] md:mx-0 md:mt-14 md:grid md:grid-cols-4 md:gap-5 md:overflow-visible md:px-0 md:pb-0"
+        className="-mx-5 mt-10 flex snap-x snap-mandatory gap-0.5 overflow-x-auto [scrollbar-width:none] md:-mx-10 md:mt-14"
       >
         {children}
       </ul>
 
-      <div role="group" aria-label={`Controles de ${etiqueta.toLowerCase()}`} className="mt-5 flex items-center justify-center gap-3 md:hidden">
+      <div role="group" aria-label={`Controles de ${etiqueta.toLowerCase()}`} className="mt-8 flex items-center justify-center gap-3">
         <button type="button" aria-label="Anterior" disabled={extremos.inicio} onClick={() => mover(-1)} className={flecha}>
           <Flecha className="size-4 rotate-[225deg]" />
         </button>

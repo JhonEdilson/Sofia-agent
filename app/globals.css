@@ -116,6 +116,30 @@ button:focus-visible {
   opacity: 1;
   transform: none;
 }
+/* descubrir = fotos de la franja de tratamientos: se destapan de abajo hacia arriba como un telón y la
+   foto se asienta (1.08 a 1) mientras tanto. No usa animation-timeline: view() porque dentro de la franja
+   el contenedor de scroll más cercano es la propia lista horizontal, no la página, y nunca avanzaría.
+   El recorte va en el marco interior y NO en el elemento observado: Chrome descuenta el clip-path del
+   propio objetivo, y un <li> recortado al 100% nunca "entra" al viewport, así que nunca se destaparía. */
+[data-aparecer="descubrir"].oculto {
+  opacity: 1;
+}
+[data-aparecer="descubrir"].oculto .franja-marco {
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 1.2s var(--ease);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+[data-aparecer="descubrir"].oculto.visto .franja-marco {
+  clip-path: inset(0);
+}
+[data-aparecer="descubrir"].oculto .franja-foto {
+  scale: 1.08;
+  transition: scale 1.6s var(--ease);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+[data-aparecer="descubrir"].oculto.visto .franja-foto {
+  scale: 1;
+}
 
 /* Entrada del hero al cargar: el único momento de autor de la página. La foto se asienta y el texto
    llega después, en dos tiempos. La foto nunca está en opacidad 0: la imagen principal carga a tiempo. */
@@ -255,6 +279,12 @@ button:focus-visible {
   [data-aparecer].oculto {
     opacity: 1;
     transform: none;
+  }
+  [data-aparecer].oculto .franja-marco {
+    clip-path: none;
+  }
+  [data-aparecer].oculto .franja-foto {
+    scale: none;
   }
   .hero-foto,
   .hero-texto,
