@@ -10,33 +10,33 @@ const TRATAMIENTOS: Tratamiento[] = [
     texto:
       "Planeamos la forma, el tamaño y el color de sus dientes para que la sonrisa se vea natural y a su medida.",
     datos: ["Lo revisa un especialista", "Empieza con la valoración gratuita"],
-    foto: "/img/tratamiento-diseno-2.jpg",
-    alt: "Hombre sonriendo a la cámara con calma",
+    foto: "/img/tratamiento-diseno.jpg",
+    alt: "Primer plano de la sonrisa de un hombre con barba corta",
   },
   {
     titulo: "Carillas",
     texto:
       "Láminas finas de porcelana sobre la cara visible del diente. En la valoración le decimos si son una opción para usted.",
     datos: ["Lo revisa un especialista", "Empieza con la valoración gratuita"],
-    // Provisional: Jhon prefiere ver las carillas en una sonrisa, no como objeto.
-    foto: "/img/tratamiento-carillas-3.png",
-    alt: "Seis carillas de porcelana sobre una superficie de piedra oscura",
+    foto: "/img/tratamiento-carillas.jpg",
+    alt: "Primer plano de una sonrisa amplia con los dientes superiores parejos",
   },
   {
     titulo: "Blanqueamiento",
     texto:
       "Aclara el color de sus dientes sin cambiar su forma. Antes se hace una limpieza dental.",
     datos: ["Cita de 60 minutos", "Antes, una limpieza de 45 minutos"],
-    foto: "/img/tratamiento-blanqueamiento-2.jpg",
-    alt: "Mujer de cabello canoso sonriendo a la cámara",
+    foto: "/img/tratamiento-blanqueamiento.jpg",
+    alt: "Primer plano de una sonrisa abierta con dientes de color natural",
   },
   {
     titulo: "Ortodoncia invisible",
     texto:
       "Alineadores transparentes para ordenar los dientes sin brackets a la vista. La valoración de ortodoncia es gratuita.",
     datos: ["Valoración de ortodoncia gratuita", "Controles de 20 minutos"],
-    foto: "/img/tratamiento-ortodoncia.jpg",
-    alt: "Mano sosteniendo un alineador dental transparente",
+    // "-2": next/image cachea por URL, con el nombre anterior se seguiría sirviendo la foto vieja.
+    foto: "/img/tratamiento-ortodoncia-2.jpg",
+    alt: "Primer plano de la sonrisa de un hombre de piel oscura, de tres cuartos de perfil",
   },
 ];
 
