@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+/* Paleta A2: tinta verdosa y hoja clara. Sin color de acento: el único contraste fuerte es el blanco. */
+:root {
+  --demo: #0a0d0b;
+  --demo-text: #9fa89f;
+  --ink: #0e1210;
+  --sheet: #eef1ea;
+  --line: #d5dacf;
+  --muted: #566057;
+  --pearl: #f4f6ef;
+  /* Desaceleración exponencial: llegadas seguras, sin rebote. */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --color-demo: var(--demo);
+  --color-demo-text: var(--demo-text);
+  --color-ink: var(--ink);
+  --color-sheet: var(--sheet);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-pearl: var(--pearl);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-gloock);
+}
+
+/* Escala tipográfica fluida: cada tamaño crece de forma continua con el ancho de la ventana, desde 320 px
+   hasta ~1100 px, en vez de saltar en un breakpoint. Cada línea es una recta entre dos puntos:
+   clamp(tamaño a 320 px, base + pendiente·vw, tamaño a 1100 px). La pendiente empieza ya en 320 px, así
+   que también cambia entre un celular chico y uno grande. */
+@theme {
+  --text-titulo: clamp(2rem, 1.28rem + 3.6vw, 3.75rem); /* títulos de sección: 32 → 60 px */
+  --text-titulo--line-height: 1.05;
+  --text-subtitulo: clamp(1.75rem, 1.24rem + 2.56vw, 3rem); /* el llamado final: 28 → 48 px */
+  --text-subtitulo--line-height: 1.1;
+  --text-medio: clamp(1.75rem, 1.44rem + 1.54vw, 2.5rem); /* confirmación de la cita: 28 → 40 px */
+  --text-medio--line-height: 1.15;
+  --text-destacado: clamp(1.0625rem, 0.83rem + 1.15vw, 1.625rem); /* tarjetas del hero: 17 → 26 px */
+  --text-destacado--line-height: 1.1;
+  --text-dato: clamp(1.3125rem, 1.13rem + 0.9vw, 1.75rem); /* datos grandes: 21 → 28 px */
+  --text-dato--line-height: 1.2;
+  --text-card: clamp(1.1875rem, 1.06rem + 0.64vw, 1.5rem); /* títulos de tarjeta y de paso: 19 → 24 px */
+  --text-card--line-height: 1.2;
+  --text-lead: clamp(1rem, 0.95rem + 0.26vw, 1.125rem); /* párrafo de apertura: 16 → 18 px */
+  --text-lead--line-height: 1.6;
+  --text-cuerpo: clamp(0.9375rem, 0.91rem + 0.13vw, 1rem); /* texto corrido: 15 → 16 px */
+  --text-cuerpo--line-height: 1.6;
+  --text-nota: clamp(0.75rem, 0.73rem + 0.13vw, 0.8125rem); /* notas, etiquetas y avisos: 12 → 13 px */
+  --text-nota--line-height: 1.5;
+}
+
+/* La navegación es fija: sin esto los enlaces #ancla dejan el título tapado por la barra. */
+html {
+  scroll-padding-top: 84px;
+  /* La barra de scroll es parte de la página: toma la paleta en vez del gris del sistema. */
+  scrollbar-color: var(--muted) var(--demo);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  background: var(--demo);
+  color: var(--ink);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  caret-color: var(--ink);
+}
+
+/* Selección del texto: legible sobre la hoja clara y sobre los bloques de tinta. */
+::selection {
+  background: var(--muted);
+  color: var(--pearl);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+a {
+  text-underline-offset: 4px;
+}
+
+/* El foco toma el color del texto del elemento: blanco sobre la foto, tinta sobre la hoja. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* ---------- Movimiento ---------- */
+
+/* Aparecer con el scroll. Lo activa app/aparecer.tsx: solo marca como `oculto` lo que está bajo el
+   pliegue, así que sin JavaScript (o con movimiento reducido) todo se ve desde el inicio.
+   Tres comportamientos según el elemento, no una misma entrada para todo:
+   subir  = bloques de texto (fundido y 18 px hacia arriba)
+   fundir = paneles grandes (solo fundido: un panel de 800 px que se desplaza se siente pesado)
+   Las listas se escalonan con --i, con tope de 270 ms en total. */
+[data-aparecer].oculto {
+  opacity: 0;
+  transition:
+    opacity 0.9s var(--ease),
+    transform 0.9s var(--ease);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+[data-aparecer="subir"].oculto {
+  transform: translateY(18px);
+}
+[data-aparecer].oculto.visto {
+  opacity: 1;
+  transform: none;
+}
+
+/* Entrada del hero al cargar: el único momento de autor de la página. La foto se asienta y el texto
+   llega después, en dos tiempos. La foto nunca está en opacidad 0: la imagen principal carga a tiempo. */
+@keyframes hero-foto {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes hero-texto {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-foto {
+  animation: hero-foto 1.8s var(--ease) both;
+}
+.hero-texto {
+  animation: hero-texto 1s var(--ease) both;
+  animation-delay: var(--retraso, 0ms);
+}
+
+/* Subrayado que se dibuja de izquierda a derecha al pasar el cursor o enfocar. */
+.enlace-sub {
+  position: relative;
+}
+.enlace-sub::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -5px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease);
+}
+@media (hover: hover) {
+  .enlace-sub:hover::after {
+    transform: scaleX(1);
+  }
+}
+.enlace-sub:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Orbe de Sofía: las barras se quedan en su altura de reposo; al hablar ondulan. */
+.orbe-barra {
+  transform: scaleY(var(--h, 0.5));
+}
+.orbe-hablando .orbe-barra {
+  animation: onda 0.9s ease-in-out infinite;
+}
+.orbe-reposo {
+  animation: respirar 4s ease-in-out infinite;
+}
+@keyframes onda {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes respirar {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Contenido que se llena en vivo (sección "por dentro"): entra al aparecer, por tiempo y no por scroll. */
+.aparece {
+  animation: aparecer-ahora 0.6s var(--ease) both;
+}
+@keyframes aparecer-ahora {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* FAQ: la respuesta se abre con una transición de alto donde el navegador lo soporta (Chromium);
+   en el resto se abre de golpe, sin romperse. */
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.3s ease,
+      content-visibility 0.3s allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+}
+
+/* Check de la confirmación: se dibuja con el trazo. */
+.trazo-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: dibujar 0.6s 0.15s ease-out forwards;
+}
+@keyframes dibujar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Movimiento reducido: sin desplazamientos ni entradas. Los cambios de estado (hover, foco, abrir una
+   respuesta) siguen ocurriendo, solo que al instante, así que el feedback no se pierde. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  [data-aparecer].oculto {
+    opacity: 1;
+    transform: none;
+  }
+  .hero-foto,
+  .hero-texto,
+  .orbe-hablando .orbe-barra,
+  .orbe-reposo,
+  .aparece {
+    animation: none !important;
+  }
+  .trazo-check {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
